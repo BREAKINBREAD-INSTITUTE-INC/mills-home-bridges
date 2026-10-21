@@ -21,9 +21,28 @@ camera, thermostat or account setting. They read, and they answer only the addre
 | `brand_render/`, `wallpaper_render/` | HTML sources used to render the launcher's banner, icon and wallpapers. |
 | `MILLS-OS-TV-DESIGN-RULES.md` | The design system the TV screens follow: tokens, type scale, focus model, data-honesty rules. |
 
-Not included: the dashboard's design boards and their rendered pages (`dashboard/boards/`,
-`tv-r-*.html`, `tv-v4*.html`). They were dated snapshots of our own build status. Add your own
-boards to `dashboard/boards/` and run `dashboard/build_tv.sh`.
+### Sample TV boards
+
+`dashboard/boards/` holds ten **sample** boards (`TVR-Glance`, `Waiting`, `Activity`, `Leads`,
+`Next`, `Fix`, `Safety`, `Machines`, `Models`, `Log`), and `dashboard/tv-r-*.html` are those boards
+already rendered, so `tv.html` works out of the box. Every name, number, time and address on them
+is made up (Lead A to Lead D, machines `hub`, `studio-1`, `studio-2`, `gpu-1`, `monitor-1`, the date
+2026-01-01), and each page carries a **SAMPLE DATA** label. Our own boards are not published: they
+were dated snapshots of our build status.
+
+To use your own data:
+
+1. Edit a board in `dashboard/boards/`. The markup and styles are the layout; the data is the JSON
+   returned by `renderVals()` in the `<script type="text/x-dc">` block at the bottom. `{{name}}`
+   fills in a value and `<sc-for list="{{rows}}" as="r">` repeats a block for each item.
+2. Remove the `SAMPLE DATA` label from the header when the data is real.
+3. Run `bash dashboard/build_tv.sh` (needs `node`). It renders each board to `tv-r-<name>.html`,
+   fails if anything is left unrendered, and writes `missioncontrol.html` from `tv.html`.
+4. To add or drop a page, change `PAIRS` in `build_tv.sh` and the page lists in `tv.html` and
+   `tv_page.sh` to match.
+
+`build_tv.sh` keeps the first `missioncontrol.html` it replaces as `missioncontrol.before-tv.html`
+(git-ignored); `bash build_tv.sh undo` puts it back.
 
 ## Setup
 

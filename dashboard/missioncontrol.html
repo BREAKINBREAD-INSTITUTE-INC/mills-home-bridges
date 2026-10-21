@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MILLS OS TV</title>
-<!-- MILLS OS TV v2.1 (Oct 19 2026). Eight pages built for the TV, 1920x1080 each. v2.1: on-screen ‹ AUTO › buttons for the TV cursor. v2.2: window.millsKey for the MILLS OS TV app. v2.3: two looks, roomy (10 pages) and dense (8 pages).
+<!-- MILLS OS TV v2.4. Ten pages built for the TV (rendered from boards/ by build_tv.sh), 1920x1080 each. v2.1: on-screen ‹ AUTO › buttons for the TV cursor. v2.2: window.millsKey for the MILLS OS TV app. v2.3: two looks, roomy (10 pages) and dense (8 pages). v2.4: both looks use the tv-r-*.html pages.
      Remote: Left / Right (or Up / Down) = previous / next page. OK = auto on or off. 1 to 8 = jump to a page.
      From HUB:  bash tv_page.sh activity   ·   bash tv_page.sh auto   ·   bash tv_page.sh off   ·   bash tv_page.sh list
      Auto mode loops the pages marked auto below. Your choice is remembered on the TV.
@@ -28,15 +28,16 @@ iframe.on{opacity:1}
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="diag"></div>
 <script>
+// The dense look shows 8 of the 10 boards (no Waiting, no Coming up) with longer turns.
 var PAGES_DENSE = [
-  { key: "glance",   file: "tv-v4-tv.html",          name: "Glance",    secs: 45, auto: true },
-  { key: "activity", file: "tv-v4-tv-activity.html", name: "Activity",  secs: 25, auto: true },
-  { key: "leads",    file: "tv-v4-tv-leads.html",    name: "Leads",     secs: 25, auto: true },
-  { key: "fix",      file: "tv-v4-tv-claims.html",   name: "FORGE fix", secs: 25, auto: true },
-  { key: "safety",   file: "tv-v4-tv-safety.html",   name: "Safety",    secs: 25, auto: true },
-  { key: "machines", file: "tv-v4-tv-machines.html", name: "Machines",  secs: 25, auto: true },
-  { key: "models",   file: "tv-v4-tv-models.html",   name: "Models",    secs: 25, auto: true },
-  { key: "log",      file: "tv-v4-tv-log.html",      name: "Log",       secs: 25, auto: true }
+  { key: "glance",   file: "tv-r-glance.html",   name: "Glance",    secs: 45, auto: true },
+  { key: "activity", file: "tv-r-activity.html", name: "Activity",  secs: 25, auto: true },
+  { key: "leads",    file: "tv-r-leads.html",    name: "Leads",     secs: 25, auto: true },
+  { key: "fix",      file: "tv-r-fix.html",      name: "Fix",       secs: 25, auto: true },
+  { key: "safety",   file: "tv-r-safety.html",   name: "Safety",    secs: 25, auto: true },
+  { key: "machines", file: "tv-r-machines.html", name: "Machines",  secs: 25, auto: true },
+  { key: "models",   file: "tv-r-models.html",   name: "Models",    secs: 25, auto: true },
+  { key: "log",      file: "tv-r-log.html",      name: "Log",       secs: 25, auto: true }
 ];
 var PAGES_ROOMY = [
   { key: "glance",   file: "tv-r-glance.html",   name: "Glance",    secs: 40, auto: true },
@@ -44,7 +45,7 @@ var PAGES_ROOMY = [
   { key: "activity", file: "tv-r-activity.html", name: "Activity",  secs: 20, auto: true },
   { key: "leads",    file: "tv-r-leads.html",    name: "Leads",     secs: 20, auto: true },
   { key: "next",     file: "tv-r-next.html",     name: "Coming up", secs: 15, auto: true },
-  { key: "fix",      file: "tv-r-fix.html",      name: "FORGE fix", secs: 20, auto: true },
+  { key: "fix",      file: "tv-r-fix.html",      name: "Fix",       secs: 20, auto: true },
   { key: "safety",   file: "tv-r-safety.html",   name: "Safety",    secs: 20, auto: true },
   { key: "machines", file: "tv-r-machines.html", name: "Machines",  secs: 20, auto: true },
   { key: "models",   file: "tv-r-models.html",   name: "Models",    secs: 20, auto: true },

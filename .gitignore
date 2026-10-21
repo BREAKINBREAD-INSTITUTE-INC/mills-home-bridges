@@ -15,10 +15,9 @@ launcher_backups/
 millsos-tv-app/.gradle/
 millsos-tv-app/app/build/
 millsos-tv-app/local.properties
-# rendered dashboard pages and private board designs
-dashboard/boards/
-dashboard/tv-r-*.html
+# old dashboard pages and the backup build_tv.sh keeps (the sample boards and tv-r-*.html are committed)
 dashboard/tv-v4*.html
+dashboard/missioncontrol.before-tv.html
 *.tgz
 *.apk
 .DS_Store

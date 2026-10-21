@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MILLS OS TV</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#100D0B}
+a{color:inherit;text-decoration:none}
+.app{width:1440px;height:900px;display:grid;grid-template-columns:232px minmax(0,1fr);background:#14110F;color:#EDE7DF;font-family:'IBM Plex Sans',sans-serif;font-size:14px;overflow:hidden;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.rail{background:#100D0B;border-right:1px solid #262019;padding:18px 12px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.brand{display:flex;gap:10px;align-items:center;padding:0 6px}
+.mark{width:34px;height:34px;border:1px solid #3A322B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-size:19px}
+.bt{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em}
+.bs{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#8D847B}
+.grp{display:flex;flex-direction:column;gap:2px}
+.gl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7A7168;padding:0 10px 6px}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:#BDB4AA;font-size:14px}
+.nav.on{background:#221C17;color:#F5EFE7;box-shadow:inset 2px 0 0 #F08A4B}
+.nb{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8D847B}
+.nb.hot{color:#F2C46D}
+.railfoot{margin-top:auto;border-top:1px solid #262019;padding:12px 6px 0;display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8D847B;line-height:1.4}
+.main{display:grid;grid-template-rows:54px minmax(0,1fr);min-width:0;min-height:0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;border-bottom:1px solid #262019}
+.crumb{font-size:13px;color:#8D847B}.crumb b{color:#EDE7DF;font-weight:500}
+.search{width:330px;display:flex;justify-content:space-between;align-items:center;border:1px solid #2E2721;border-radius:8px;padding:7px 10px;color:#7A7168;font-size:13px}
+.kbd{font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #3A322B;border-radius:4px;padding:1px 5px;color:#9A9087}
+.tr{display:flex;gap:8px;align-items:center}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;color:#BDB4AA;border:1px solid #2E2721;border-radius:999px;padding:5px 10px;white-space:nowrap}
+.tag.live{color:#9FD8B4;border-color:#2C4A37}
+.tag.ro{color:#F5C9AE;border-color:#5A3420}
+.content{padding:18px 24px 18px;display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.h1{margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:30px;line-height:1.05}
+.sub{font-size:14px;color:#9A9087;margin-top:4px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid #262019}
+.tab{padding:9px 14px 10px;color:#9A9087;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:#F5EFE7;border-bottom-color:#F08A4B}
+.tab .c{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A7168;margin-left:6px}
+.card{background:#1B1714;border:1px solid #2A231D;border-radius:12px;padding:14px 16px;min-width:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.13em;color:#8D847B;text-transform:uppercase}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;gap:6px}
+.big{font-family:'Newsreader',serif;font-size:40px;line-height:1}
+.tl{font-size:12.5px;color:#9A9087;display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:2px 9px 2px 7px;border-radius:999px;border:1px solid;white-space:nowrap;line-height:18px}
+.p-fail{color:#F6A39A;border-color:#6A2C27;background:#2A1513}
+.p-you{color:#F2C46D;border-color:#6A5322;background:#2A2112}
+.p-work{color:#A9CBEA;border-color:#2E4A63;background:#131E28}
+.p-ok{color:#9FD8B4;border-color:#2C4A37;background:#12211A}
+.p-idle{color:#B3AAA0;border-color:#3A332D;background:#1E1915}
+.p-unk{color:#B3AAA0;border-color:#4A423A;border-style:dashed;background:transparent}
+.c-fail{background:#E8776C}.c-you{background:#E9B44C}.c-work{background:#7FA9D4}.c-ok{background:#6FBF8E}.c-idle{background:#7A7168}
+.list{display:flex;flex-direction:column}
+.li{display:grid;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #241E19}
+.li:first-child{border-top:0}
+.t1{font-size:14px;color:#EDE7DF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2{font-size:12.5px;color:#8D847B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mono{font-family:'IBM Plex Mono',monospace}
+.mut{color:#8D847B}
+.kv{display:grid;grid-template-columns:132px minmax(0,1fr);gap:7px 12px;font-size:13.5px}
+.kv .k{color:#8D847B}
+.sec{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid #241E19}
+.sec:first-child{border-top:0;padding-top:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{font-size:12.5px;color:#BDB4AA;border:1px solid #2E2721;border-radius:999px;padding:4px 11px;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.chip.on{background:#EDE7DF;color:#14110F;border-color:#EDE7DF}
+.chip b{font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+.code{background:#0F0C0A;border:1px solid #241E19;border-radius:8px;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.6;color:#D9D1C7;white-space:pre;overflow:hidden}
+.note{font-size:12.5px;color:#8D847B;line-height:1.45}
+.banner{display:flex;gap:12px;align-items:center;border:1px solid #6A5322;background:#211A10;border-radius:10px;padding:9px 14px;font-size:13px;color:#E9D9B8}
+.hbar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px}
+.panel{background:#1B1714;border:1px solid #2A231D;border-radius:12px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel .ph2{padding:14px 16px 0;display:flex;flex-direction:column;gap:6px}
+.panel .body{padding:12px 16px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.quote{border-left:3px solid #F08A4B;background:#221A15;border-radius:0 8px 8px 0;padding:9px 12px;font-size:14px;line-height:1.45}
+.diffm{background:#3A1714;color:#F28B82}.diffp{background:#16301C;color:#8FD19E}
+.steps{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px 10px;font-size:13px;align-items:baseline}
+.th{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#7A7168;text-transform:uppercase;padding-bottom:6px}
+
+.tv{width:1920px;height:1080px;background:#14110F;color:#EDE7DF;font-family:'IBM Plex Sans',sans-serif;padding:42px 72px 34px;display:flex;flex-direction:column;gap:22px;overflow:hidden;box-sizing:border-box}
+.tv *{box-sizing:border-box}
+.tv .pill{font-size:24px;padding:6px 18px 6px 14px;gap:10px;line-height:30px;border-width:2px}
+.tv .card{border-radius:18px;padding:20px 26px;border-width:2px}
+.tv .lbl{font-size:18px;letter-spacing:.14em}
+.tvt1{font-size:26px;line-height:1.25;color:#EDE7DF}
+.tvt2{font-size:22px;line-height:1.3;color:#A79E94}
+.tvbig{font-family:'Newsreader',serif;font-size:64px;line-height:1}
+
+.tvfoot{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:auto;border-top:2px solid #262019;padding-top:16px}
+.tvtab{font-size:20px;color:#9A9087;padding:6px 14px;border-radius:999px;border:2px solid transparent;white-space:nowrap}
+.tvtab .n{font-family:'IBM Plex Mono',monospace;font-size:16px;color:#7A7168;margin-right:8px}
+.tvtab.on{color:#14110F;background:#EDE7DF;border-color:#EDE7DF}.tvtab.on .n{color:#5B544D}
+.tvrow{display:grid;gap:18px;align-items:center;padding:13px 0;border-top:2px solid #241E19}
+.tvrow:first-child{border-top:0}
+.tvh{font-family:'IBM Plex Mono',monospace;font-size:17px;letter-spacing:.12em;color:#7A7168;text-transform:uppercase}
+.tvkv{display:grid;grid-template-columns:230px minmax(0,1fr);gap:12px 18px;font-size:24px}
+.tvkv .k{color:#9A9087}
+.tvbtn{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:64px;padding:0 18px;border-radius:14px;border:2px solid #4A4038;background:#1F1A16;color:#EDE7DF;font-size:34px;line-height:1}
+.tvbtn.wide{font-family:'IBM Plex Mono',monospace;font-size:20px;letter-spacing:.1em;min-width:190px}
+.tvbtn.on{border-color:#F08A4B;color:#F5C9AE}
+
+.tv{padding:48px 88px 36px;gap:30px}
+.rh{font-family:'Newsreader',serif;font-size:84px;line-height:1.02;font-weight:400}
+.rh i{color:#F08A4B}
+.rrow{display:grid;gap:28px;align-items:center;padding:22px 0;border-top:2px solid #241E19}
+.rrow:first-child{border-top:0}
+.rt1{font-size:34px;line-height:1.25;color:#EDE7DF}
+.rt2{font-size:26px;line-height:1.3;color:#A79E94}
+.tv .pill{font-size:26px;padding:8px 20px 8px 16px;line-height:32px}
+.tvtab{font-size:19px;padding:6px 12px}
+.sample{font-family:'IBM Plex Mono',monospace;font-size:18px;letter-spacing:.14em;color:#F2C46D;border:2px dashed #6A5322;border-radius:999px;padding:6px 16px;white-space:nowrap}
+</style>
+
+</head>
+<body>
+
+<div class="tv">
+<header style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:20px;align-items:center"><div class="mark" style="width:64px;height:64px;font-size:36px;border-width:2px">M</div><div><div class="bt" style="font-size:24px">MILLS OS TV</div><div class="bs" style="font-size:18px;margin-top:4px">MISSION CONTROL · LOG</div></div><span class="sample">SAMPLE DATA</span></div><div style="text-align:right"><div class="tvbig" style="font-size:64px">9:00:00 AM</div><div class="bs" style="font-size:18px;margin-top:6px">THU JAN 1 · EXAMPLE DATE 2026-01-01 · SAMPLE DATA AS OF 9:00 AM</div></div></header>
+
+<section><div class="rh">What was done, <i>and how it went</i></div></section>
+<section style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center"><div class="rrow" style="grid-template-columns:190px minmax(0,1fr) 220px"><span class="mono rt2">Jan 1 08:50</span><span class="rt1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lead D asked before changing a sample setting</span><span style="text-align:right"><span class="pill p-you">▲ Asked</span></span></div><div class="rrow" style="grid-template-columns:190px minmax(0,1fr) 220px"><span class="mono rt2">Jan 1 08:20</span><span class="rt1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lead C sorted 12 sample files</span><span style="text-align:right"><span class="pill p-ok">✓ Done</span></span></div><div class="rrow" style="grid-template-columns:190px minmax(0,1fr) 220px"><span class="mono rt2">Jan 1 08:05</span><span class="rt1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">monitor-1 checked five sample machines</span><span style="text-align:right"><span class="pill p-ok">✓ Done</span></span></div><div class="rrow" style="grid-template-columns:190px minmax(0,1fr) 220px"><span class="mono rt2">Jan 1 07:40</span><span class="rt1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lead B sample test run, 1 of 20 failed</span><span style="text-align:right"><span class="pill p-fail">✕ 1 failed</span></span></div><div class="rrow" style="grid-template-columns:190px minmax(0,1fr) 220px"><span class="mono rt2">Jan 1 07:10</span><span class="rt1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lead A drafted a sample summary</span><span style="text-align:right"><span class="pill p-ok">✓ Done</span></span></div><div class="rrow" style="grid-template-columns:190px minmax(0,1fr) 220px"><span class="mono rt2">Jan 1 06:00</span><span class="rt1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sample nightly backup of hub</span><span style="text-align:right"><span class="pill p-ok">✓ Done</span></span></div></section>
+<footer class="tvfoot"><nav aria-label="TV pages" style="display:flex;gap:6px;flex-wrap:nowrap"><a href="tv-r-glance.html" class="tvtab"><span class="n">1</span>Glance</a><a href="tv-r-waiting.html" class="tvtab"><span class="n">2</span>Waiting</a><a href="tv-r-activity.html" class="tvtab"><span class="n">3</span>Activity</a><a href="tv-r-leads.html" class="tvtab"><span class="n">4</span>Leads</a><a href="tv-r-next.html" class="tvtab"><span class="n">5</span>Coming up</a><a href="tv-r-fix.html" class="tvtab"><span class="n">6</span>Fix</a><a href="tv-r-safety.html" class="tvtab"><span class="n">7</span>Safety</a><a href="tv-r-machines.html" class="tvtab"><span class="n">8</span>Machines</a><a href="tv-r-models.html" class="tvtab"><span class="n">9</span>Models</a><a href="tv-r-log.html" class="tvtab on"><span class="n">0</span>Log</a></nav><div style="display:flex;gap:12px;align-items:center"><a href="#prev" class="tvbtn" aria-label="Previous page">‹</a><a href="#auto" id="tvauto" class="tvbtn wide">AUTO ON</a><a href="#next" class="tvbtn" aria-label="Next page">›</a></div></footer>
+</div>
+
+<script>
+/* tv-fit v1.2: scale the board (any size) to whatever screen opens it. */
+(function () {
+  var r = document.body.firstElementChild;
+  if (!r) return;
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.height = "100vh"; // body clips at its own height otherwise (v1.1 fix)
+  document.body.style.overflow = "hidden";
+  function least(list, dflt) { var m = 0; for (var k = 0; k < list.length; k++) { var v = list[k]; if (v > 0 && (!m || v < m)) m = v; } return m || dflt; }
+  function f() {
+    var w, h, vv = window.visualViewport;
+    if (window.self !== window.top) {           // inside the rotator: the frame is the screen
+      w = window.innerWidth || 1920; h = window.innerHeight || 1080;
+    } else {                                    // opened on its own: smallest size any API reports
+      w = least([window.innerWidth, document.documentElement.clientWidth, vv && vv.width, window.screen && screen.width], 1920);
+      h = least([window.innerHeight, document.documentElement.clientHeight, vv && vv.height, window.screen && screen.height], 1080);
+    }
+    var bw = r.offsetWidth || 1920, bh = r.offsetHeight || 1080;
+    var s = Math.min(w / bw, h / bh);
+    r.style.transformOrigin = "0 0";
+    r.style.transform = "scale(" + s + ")";
+    r.style.marginLeft = Math.max(0, (w - bw * s) / 2) + "px";
+    r.style.marginTop = Math.max(0, (h - bh * s) / 2) + "px";
+  }
+  window.addEventListener("resize", f);
+  f();
+  setInterval(f, 5000);
+})();
+</script>
+</body>
+</html>

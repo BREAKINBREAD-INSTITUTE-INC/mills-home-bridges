@@ -13,10 +13,10 @@ TV="${TV:?set TV to the TV IP address, e.g. TV=192.168.1.x}"; IP="$(ipconfig get
 LOOK="$(cat dashboard/look.txt 2>/dev/null || echo roomy)"
 if [ "$LOOK" = dense ]; then
   PAGES=(glance activity leads fix safety machines models log)
-  NAMES=("Glance" "Activity" "Leads" "FORGE fix" "Safety" "Machines" "Models" "Log")
+  NAMES=("Glance" "Activity" "Leads" "Fix" "Safety" "Machines" "Models" "Log")
 else
   PAGES=(glance waiting activity leads next fix safety machines models log)
-  NAMES=("Glance" "Waiting" "Activity" "Leads" "Coming up" "FORGE fix" "Safety" "Machines" "Models" "Log")
+  NAMES=("Glance" "Waiting" "Activity" "Leads" "Coming up" "Fix" "Safety" "Machines" "Models" "Log")
 fi
 a="${1:-list}"
 case "$a" in

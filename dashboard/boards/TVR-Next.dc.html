@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MILLS OS TV · Next (sample)</title>
+<!-- SAMPLE DATA. Every name, number, time and address on this board is made up. Replace renderVals() with your own data. -->
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#100D0B}
+a{color:inherit;text-decoration:none}
+.app{width:1440px;height:900px;display:grid;grid-template-columns:232px minmax(0,1fr);background:#14110F;color:#EDE7DF;font-family:'IBM Plex Sans',sans-serif;font-size:14px;overflow:hidden;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.rail{background:#100D0B;border-right:1px solid #262019;padding:18px 12px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.brand{display:flex;gap:10px;align-items:center;padding:0 6px}
+.mark{width:34px;height:34px;border:1px solid #3A322B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-size:19px}
+.bt{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em}
+.bs{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#8D847B}
+.grp{display:flex;flex-direction:column;gap:2px}
+.gl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7A7168;padding:0 10px 6px}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:#BDB4AA;font-size:14px}
+.nav.on{background:#221C17;color:#F5EFE7;box-shadow:inset 2px 0 0 #F08A4B}
+.nb{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8D847B}
+.nb.hot{color:#F2C46D}
+.railfoot{margin-top:auto;border-top:1px solid #262019;padding:12px 6px 0;display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8D847B;line-height:1.4}
+.main{display:grid;grid-template-rows:54px minmax(0,1fr);min-width:0;min-height:0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;border-bottom:1px solid #262019}
+.crumb{font-size:13px;color:#8D847B}.crumb b{color:#EDE7DF;font-weight:500}
+.search{width:330px;display:flex;justify-content:space-between;align-items:center;border:1px solid #2E2721;border-radius:8px;padding:7px 10px;color:#7A7168;font-size:13px}
+.kbd{font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #3A322B;border-radius:4px;padding:1px 5px;color:#9A9087}
+.tr{display:flex;gap:8px;align-items:center}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;color:#BDB4AA;border:1px solid #2E2721;border-radius:999px;padding:5px 10px;white-space:nowrap}
+.tag.live{color:#9FD8B4;border-color:#2C4A37}
+.tag.ro{color:#F5C9AE;border-color:#5A3420}
+.content{padding:18px 24px 18px;display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.h1{margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:30px;line-height:1.05}
+.sub{font-size:14px;color:#9A9087;margin-top:4px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid #262019}
+.tab{padding:9px 14px 10px;color:#9A9087;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:#F5EFE7;border-bottom-color:#F08A4B}
+.tab .c{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A7168;margin-left:6px}
+.card{background:#1B1714;border:1px solid #2A231D;border-radius:12px;padding:14px 16px;min-width:0}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.13em;color:#8D847B;text-transform:uppercase}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;gap:6px}
+.big{font-family:'Newsreader',serif;font-size:40px;line-height:1}
+.tl{font-size:12.5px;color:#9A9087;display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:2px 9px 2px 7px;border-radius:999px;border:1px solid;white-space:nowrap;line-height:18px}
+.p-fail{color:#F6A39A;border-color:#6A2C27;background:#2A1513}
+.p-you{color:#F2C46D;border-color:#6A5322;background:#2A2112}
+.p-work{color:#A9CBEA;border-color:#2E4A63;background:#131E28}
+.p-ok{color:#9FD8B4;border-color:#2C4A37;background:#12211A}
+.p-idle{color:#B3AAA0;border-color:#3A332D;background:#1E1915}
+.p-unk{color:#B3AAA0;border-color:#4A423A;border-style:dashed;background:transparent}
+.c-fail{background:#E8776C}.c-you{background:#E9B44C}.c-work{background:#7FA9D4}.c-ok{background:#6FBF8E}.c-idle{background:#7A7168}
+.list{display:flex;flex-direction:column}
+.li{display:grid;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #241E19}
+.li:first-child{border-top:0}
+.t1{font-size:14px;color:#EDE7DF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2{font-size:12.5px;color:#8D847B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mono{font-family:'IBM Plex Mono',monospace}
+.mut{color:#8D847B}
+.kv{display:grid;grid-template-columns:132px minmax(0,1fr);gap:7px 12px;font-size:13.5px}
+.kv .k{color:#8D847B}
+.sec{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid #241E19}
+.sec:first-child{border-top:0;padding-top:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{font-size:12.5px;color:#BDB4AA;border:1px solid #2E2721;border-radius:999px;padding:4px 11px;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.chip.on{background:#EDE7DF;color:#14110F;border-color:#EDE7DF}
+.chip b{font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+.code{background:#0F0C0A;border:1px solid #241E19;border-radius:8px;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.6;color:#D9D1C7;white-space:pre;overflow:hidden}
+.note{font-size:12.5px;color:#8D847B;line-height:1.45}
+.banner{display:flex;gap:12px;align-items:center;border:1px solid #6A5322;background:#211A10;border-radius:10px;padding:9px 14px;font-size:13px;color:#E9D9B8}
+.hbar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px}
+.panel{background:#1B1714;border:1px solid #2A231D;border-radius:12px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel .ph2{padding:14px 16px 0;display:flex;flex-direction:column;gap:6px}
+.panel .body{padding:12px 16px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.quote{border-left:3px solid #F08A4B;background:#221A15;border-radius:0 8px 8px 0;padding:9px 12px;font-size:14px;line-height:1.45}
+.diffm{background:#3A1714;color:#F28B82}.diffp{background:#16301C;color:#8FD19E}
+.steps{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px 10px;font-size:13px;align-items:baseline}
+.th{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#7A7168;text-transform:uppercase;padding-bottom:6px}
+
+.tv{width:1920px;height:1080px;background:#14110F;color:#EDE7DF;font-family:'IBM Plex Sans',sans-serif;padding:42px 72px 34px;display:flex;flex-direction:column;gap:22px;overflow:hidden;box-sizing:border-box}
+.tv *{box-sizing:border-box}
+.tv .pill{font-size:24px;padding:6px 18px 6px 14px;gap:10px;line-height:30px;border-width:2px}
+.tv .card{border-radius:18px;padding:20px 26px;border-width:2px}
+.tv .lbl{font-size:18px;letter-spacing:.14em}
+.tvt1{font-size:26px;line-height:1.25;color:#EDE7DF}
+.tvt2{font-size:22px;line-height:1.3;color:#A79E94}
+.tvbig{font-family:'Newsreader',serif;font-size:64px;line-height:1}
+
+.tvfoot{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:auto;border-top:2px solid #262019;padding-top:16px}
+.tvtab{font-size:20px;color:#9A9087;padding:6px 14px;border-radius:999px;border:2px solid transparent;white-space:nowrap}
+.tvtab .n{font-family:'IBM Plex Mono',monospace;font-size:16px;color:#7A7168;margin-right:8px}
+.tvtab.on{color:#14110F;background:#EDE7DF;border-color:#EDE7DF}.tvtab.on .n{color:#5B544D}
+.tvrow{display:grid;gap:18px;align-items:center;padding:13px 0;border-top:2px solid #241E19}
+.tvrow:first-child{border-top:0}
+.tvh{font-family:'IBM Plex Mono',monospace;font-size:17px;letter-spacing:.12em;color:#7A7168;text-transform:uppercase}
+.tvkv{display:grid;grid-template-columns:230px minmax(0,1fr);gap:12px 18px;font-size:24px}
+.tvkv .k{color:#9A9087}
+.tvbtn{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:64px;padding:0 18px;border-radius:14px;border:2px solid #4A4038;background:#1F1A16;color:#EDE7DF;font-size:34px;line-height:1}
+.tvbtn.wide{font-family:'IBM Plex Mono',monospace;font-size:20px;letter-spacing:.1em;min-width:190px}
+.tvbtn.on{border-color:#F08A4B;color:#F5C9AE}
+
+.tv{padding:48px 88px 36px;gap:30px}
+.rh{font-family:'Newsreader',serif;font-size:84px;line-height:1.02;font-weight:400}
+.rh i{color:#F08A4B}
+.rrow{display:grid;gap:28px;align-items:center;padding:22px 0;border-top:2px solid #241E19}
+.rrow:first-child{border-top:0}
+.rt1{font-size:34px;line-height:1.25;color:#EDE7DF}
+.rt2{font-size:26px;line-height:1.3;color:#A79E94}
+.tv .pill{font-size:26px;padding:8px 20px 8px 16px;line-height:32px}
+.tvtab{font-size:19px;padding:6px 12px}
+.sample{font-family:'IBM Plex Mono',monospace;font-size:18px;letter-spacing:.14em;color:#F2C46D;border:2px dashed #6A5322;border-radius:999px;padding:6px 16px;white-space:nowrap}
+</style>
+</helmet>
+<div class="tv">
+<header style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:20px;align-items:center"><div class="mark" style="width:64px;height:64px;font-size:36px;border-width:2px">M</div><div><div class="bt" style="font-size:24px">MILLS OS TV</div><div class="bs" style="font-size:18px;margin-top:4px">MISSION CONTROL · COMING UP</div></div><span class="sample">SAMPLE DATA</span></div><div style="text-align:right"><div class="tvbig" style="font-size:64px">9:00:00 AM</div><div class="bs" style="font-size:18px;margin-top:6px">THU JAN 1 · EXAMPLE DATE 2026-01-01 · SAMPLE DATA AS OF 9:00 AM</div></div></header>
+
+<section><div class="rh">Coming <i>up</i></div></section>
+<section style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center"><sc-for list="{{next}}" as="r" hint-placeholder-count="3"><div class="rrow" style="grid-template-columns:260px minmax(0,1fr)"><span class="mono" style="font-size:44px;color:#F08A4B">{{r.t}}</span><div><div class="rt1" style="font-size:40px">{{r.what}}</div><div class="rt2" style="margin-top:6px">{{r.then}}</div></div></div></sc-for></section>
+<footer class="tvfoot"><nav aria-label="TV pages" style="display:flex;gap:6px;flex-wrap:nowrap"><sc-for list="{{tvtabs}}" as="t" hint-placeholder-count="8"><a href="{{t.href}}" class="{{t.cls}}"><span class="n">{{t.n}}</span>{{t.label}}</a></sc-for></nav><div style="display:flex;gap:12px;align-items:center"><a href="#prev" class="tvbtn" aria-label="Previous page">‹</a><a href="#auto" id="tvauto" class="tvbtn wide">AUTO ON</a><a href="#next" class="tvbtn" aria-label="Next page">›</a></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+ "next": [
+  {
+   "t": "9:30 AM",
+   "what": "Lead A finishes the sample report",
+   "then": "Then it goes to Waiting for your read"
+  },
+  {
+   "t": "10:15 AM",
+   "what": "Lead B finishes the sample test run",
+   "then": "Then the results show on Log"
+  },
+  {
+   "t": "12:00 PM",
+   "what": "Sample backup of hub to studio-2",
+   "then": "Then monitor-1 checks the copy"
+  }
+ ],
+ "tvtabs": [
+  {
+   "label": "Glance",
+   "n": "1",
+   "href": "TVR-Glance.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Waiting",
+   "n": "2",
+   "href": "TVR-Waiting.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Activity",
+   "n": "3",
+   "href": "TVR-Activity.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Leads",
+   "n": "4",
+   "href": "TVR-Leads.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Coming up",
+   "n": "5",
+   "href": "TVR-Next.dc.html",
+   "cls": "tvtab on"
+  },
+  {
+   "label": "Fix",
+   "n": "6",
+   "href": "TVR-Fix.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Safety",
+   "n": "7",
+   "href": "TVR-Safety.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Machines",
+   "n": "8",
+   "href": "TVR-Machines.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Models",
+   "n": "9",
+   "href": "TVR-Models.dc.html",
+   "cls": "tvtab"
+  },
+  {
+   "label": "Log",
+   "n": "0",
+   "href": "TVR-Log.dc.html",
+   "cls": "tvtab"
+  }
+ ]
+};
+  }
+}
+</script>
+</body>
+</html>
