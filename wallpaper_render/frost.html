@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas><script>
+// Blueprint D2 frost recipe on the finished wallpaper: mirror-pad 180 px (blur reaches ~3 sigma), gaussian blur ~42 px,
+// desaturate 15%, soft-clip highlights (L > 85 pulled to 85) so the horizon glow can't bloom.
+var P=180, img=new Image();
+img.onload=function(){
+  var W=img.width,H=img.height, pad=document.createElement('canvas'); pad.width=W+2*P; pad.height=H+2*P;
+  var p=pad.getContext('2d');
+  // draw the 3x3 mirrored tiling around the image
+  for(var sx=-1;sx<=1;sx++)for(var sy=-1;sy<=1;sy++){
+    p.save(); p.translate(P+sx*W+(sx?W:0)*(sx<0?1:0)+(sx>0?W:0), P+sy*H+(sy<0?H:0)+(sy>0?H:0));
+    p.scale(sx?-1:1, sy?-1:1); p.drawImage(img,0,0); p.restore();
+  }
+  var c=document.getElementById('c').getContext('2d');
+  c.filter='blur(42px) saturate(0.85)'; c.drawImage(pad,-P,-P); c.filter='none';
+  var d=c.getImageData(0,0,W,H), a=d.data, cap=214; // sRGB value at roughly L*85
+  for(var i=0;i<a.length;i+=4){var y=.2126*a[i]+.7152*a[i+1]+.0722*a[i+2]; if(y>cap){var k=cap/y;a[i]*=k;a[i+1]*=k;a[i+2]*=k;}}
+  c.putImageData(d,0,0); document.title='done';
+};
+img.src=new URLSearchParams(location.search).get('src');
+</script></body></html>

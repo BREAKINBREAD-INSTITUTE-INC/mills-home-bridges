@@ -1,0 +1,3 @@
+home=com.gathin.tvhome/.MainActivity
+screensaver=com.gathin.tvhome/.ClockDream
+disabled=com.sony.dtv.upgradesetup com.sony.dtv.homekit com.sony.dtv.sonybugreportsys com.sony.dtv.otaurlprovisioning com.sony.dtv.timers com.google.android.apps.tv.launcherx com.google.android.tungsten.setupwraith com.sony.dtv.b2b.rs232csupport com.sony.dtv.seeds.iot.remotestart com.sony.dtv.livingfit com.sony.dtv.sonytab com.sony.dtv.osat.music com.sony.dtv.gestureapp com.sony.dtv.systemupdate com.mediatek.backgrounddetection com.sony.dtv.smartmediaapp com.google.android.youtube.tvmusic com.sony.dtv.sonyloglevelsettingsys com.sony.dtv.smarthelp mtktvapi.agent com.sony.dtv.b2b.softap com.mediatek.dmagent com.netflix.ninja 

@@ -1,0 +1,12 @@
+[
+  {"name":"FRIDAY","color":"#1D9E75","note":"chief of staff · plans, routes, reports","machine":"friday","built":"shadow","model":"core"},
+  {"name":"FORGE","color":"#E8623D","note":"code · websites · installer","machine":"forge","built":"shadow","model":"core"},
+  {"name":"PROOF","color":"#2BB3A3","note":"tester · judge on REACTOR","machine":"forge","built":"running","model":"reactor"},
+  {"name":"SENTINEL","color":"#5a6b7d","note":"watches the fleet","machine":"sentinel","built":"monitor"},
+  {"name":"SCOUT","color":"#378ADD","note":"research · fact-checking · grants","machine":"scout","built":"no"},
+  {"name":"GRACE","color":"#EF9F27","note":"grants · org records · local only","machine":"grace","built":"no"},
+  {"name":"LEX","color":"#7F77DD","note":"legal · COMPLY · on GRACE","machine":"grace","built":"no"},
+  {"name":"HARVEST","color":"#B5651D","note":"recordings · podcast · courses","machine":"forge","built":"no"},
+  {"name":"HERALD","color":"#C2185B","note":"email · texts · social","machine":"friday","built":"no"},
+  {"name":"JARVIS","color":"#4A6FA5","note":"personal lead · Keeper","machine":"","built":"no"}
+]

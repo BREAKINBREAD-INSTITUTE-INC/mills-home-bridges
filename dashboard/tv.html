@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MILLS OS TV</title>
+<!-- MILLS OS TV v2.1 (Oct 19 2026). Eight pages built for the TV, 1920x1080 each. v2.1: on-screen ‹ AUTO › buttons for the TV cursor. v2.2: window.millsKey for the MILLS OS TV app. v2.3: two looks, roomy (10 pages) and dense (8 pages).
+     Remote: Left / Right (or Up / Down) = previous / next page. OK = auto on or off. 1 to 8 = jump to a page.
+     From HUB:  bash tv_page.sh activity   ·   bash tv_page.sh auto   ·   bash tv_page.sh off   ·   bash tv_page.sh list
+     Auto mode loops the pages marked auto below. Your choice is remembered on the TV.
+     Scales to the screen, moves a few pixels every 3 minutes (burn-in), dims 11 PM to 6 AM.
+     Glance only: no buttons that change anything, no personal details. -->
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;transition:left 2s,top 2s}
+iframe{position:absolute;left:0;top:0;width:1920px;height:1080px;border:0;opacity:0;transition:opacity .8s}
+iframe.on{opacity:1}
+#dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 3s}
+#toast{position:fixed;left:50%;top:4%;transform:translateX(-50%);font:600 22px system-ui,sans-serif;color:#14110F;background:#EDE7DF;
+  border-radius:999px;padding:10px 24px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+#diag{position:fixed;left:8px;top:6px;font:12px monospace;color:#8D847B;background:#000;padding:2px 6px;opacity:.9}
+</style>
+</head>
+<body>
+<div id="stage"><iframe id="a" scrolling="no" title="Board"></iframe><iframe id="b" scrolling="no" title="Board"></iframe></div>
+<div id="dim"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="diag"></div>
+<script>
+var PAGES_DENSE = [
+  { key: "glance",   file: "tv-v4-tv.html",          name: "Glance",    secs: 45, auto: true },
+  { key: "activity", file: "tv-v4-tv-activity.html", name: "Activity",  secs: 25, auto: true },
+  { key: "leads",    file: "tv-v4-tv-leads.html",    name: "Leads",     secs: 25, auto: true },
+  { key: "fix",      file: "tv-v4-tv-claims.html",   name: "FORGE fix", secs: 25, auto: true },
+  { key: "safety",   file: "tv-v4-tv-safety.html",   name: "Safety",    secs: 25, auto: true },
+  { key: "machines", file: "tv-v4-tv-machines.html", name: "Machines",  secs: 25, auto: true },
+  { key: "models",   file: "tv-v4-tv-models.html",   name: "Models",    secs: 25, auto: true },
+  { key: "log",      file: "tv-v4-tv-log.html",      name: "Log",       secs: 25, auto: true }
+];
+var PAGES_ROOMY = [
+  { key: "glance",   file: "tv-r-glance.html",   name: "Glance",    secs: 40, auto: true },
+  { key: "waiting",  file: "tv-r-waiting.html",  name: "Waiting",   secs: 20, auto: true },
+  { key: "activity", file: "tv-r-activity.html", name: "Activity",  secs: 20, auto: true },
+  { key: "leads",    file: "tv-r-leads.html",    name: "Leads",     secs: 20, auto: true },
+  { key: "next",     file: "tv-r-next.html",     name: "Coming up", secs: 15, auto: true },
+  { key: "fix",      file: "tv-r-fix.html",      name: "FORGE fix", secs: 20, auto: true },
+  { key: "safety",   file: "tv-r-safety.html",   name: "Safety",    secs: 20, auto: true },
+  { key: "machines", file: "tv-r-machines.html", name: "Machines",  secs: 20, auto: true },
+  { key: "models",   file: "tv-r-models.html",   name: "Models",    secs: 20, auto: true },
+  { key: "log",      file: "tv-r-log.html",      name: "Log",       secs: 20, auto: true }
+];
+// Which look: "roomy" (one idea per page, bigger type) or "dense" (more on each page). build_tv.sh sets this line from look.txt.
+var LOOK = "roomy";
+var PAGES = LOOK === "dense" ? PAGES_DENSE : PAGES_ROOMY;
+var DRIFT = 6, DRIFT_EVERY = 180, DIM_FROM = 23, DIM_TO = 6, DIM_LEVEL = 0.5, DIAG_SECONDS = 15;
+
+var stage = document.getElementById("stage"), frames = [document.getElementById("a"), document.getElementById("b")];
+var front = 0, dx = 0, dy = 0, scale = 1, ox = 0, oy = 0, cur = 0, auto = true, timer = null, toastTimer = null;
+
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("millstv." + k); localStorage.setItem("millstv." + k, v); } catch (e) { return null; } }
+function param(k) { var m = new RegExp("[?&]" + k + "=([^&]*)").exec(location.search); return m ? decodeURIComponent(m[1]) : null; }
+function indexOf(key) { if (/^[0-9]+$/.test(key || "")) { var n = Number(key) - 1; return n >= 0 && n < PAGES.length ? n : -1; } for (var k = 0; k < PAGES.length; k++) if (PAGES[k].key === key) return k; return -1; }
+
+// Size: TV browsers disagree, so use the smallest size any of them reports.
+function least(list, dflt) { var m = 0; for (var k = 0; k < list.length; k++) { var v = list[k]; if (v > 0 && (!m || v < m)) m = v; } return m || dflt; }
+function fit() {
+  var vv = window.visualViewport;
+  var w = least([window.innerWidth, document.documentElement.clientWidth, vv && vv.width, window.screen && screen.width], 1920);
+  var h = least([window.innerHeight, document.documentElement.clientHeight, vv && vv.height, window.screen && screen.height], 1080);
+  document.getElementById("diag").textContent = "fit " + Math.round(w) + "x" + Math.round(h) + " · dpr " + (window.devicePixelRatio || 1) + " · tz " + (-new Date().getTimezoneOffset() / 60);
+  scale = Math.min(w / 1920, h / 1080);
+  ox = (w - 1920 * scale) / 2; oy = (h - 1080 * scale) / 2;
+  place();
+}
+function place() { stage.style.transform = "scale(" + scale + ")"; stage.style.left = (ox + dx) + "px"; stage.style.top = (oy + dy) + "px"; }
+
+function load(n) {
+  cur = (n + PAGES.length) % PAGES.length;
+  var back = 1 - front, f = frames[back];
+  f.onload = function () {
+    tick(f); hookKeys(f); footer(f);
+    f.className = "on"; frames[front].className = ""; front = back;
+  };
+  f.src = PAGES[cur].file + "?t=" + Date.now();
+  store("page", PAGES[cur].key);
+  schedule();
+}
+function nextAuto() { for (var s = 1; s <= PAGES.length; s++) { var n = (cur + s) % PAGES.length; if (PAGES[n].auto) return n; } return cur; }
+function schedule() {
+  if (timer) clearTimeout(timer);
+  timer = null;
+  if (auto) timer = setTimeout(function () { load(nextAuto()); }, PAGES[cur].secs * 1000);
+}
+function setAuto(on) { auto = on; store("auto", on ? "on" : "off"); schedule(); footer(frames[0]); footer(frames[1]); toast(on ? "Auto on · pages change on their own" : "Auto off · stays on " + PAGES[cur].name); }
+function toast(t) {
+  var e = document.getElementById("toast"); e.textContent = t; e.className = "show";
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { e.className = ""; }, 3000);
+}
+// The board's footer shows the page tabs. Write whether auto is on into it.
+function footer(f) {
+  try { var e = f.contentDocument.getElementById("tvauto"); if (e) { e.textContent = "AUTO " + (auto ? "ON" : "OFF"); e.className = "tvbtn wide" + (auto ? " on" : ""); } } catch (err) {}
+}
+
+// Remote keys. D-pad = arrow keys; OK = Enter (or keyCode 23).
+function onKey(e) {
+  var k = e.key, c = e.keyCode;
+  if (k === "ArrowRight" || k === "ArrowDown" || c === 39 || c === 40) { load(cur + 1); toast((cur + 1) + " · " + PAGES[cur].name); }
+  else if (k === "ArrowLeft" || k === "ArrowUp" || c === 37 || c === 38) { load(cur - 1); toast((cur + 1) + " · " + PAGES[cur].name); }
+  else if (k === "Enter" || c === 13 || c === 23 || k === "MediaPlayPause" || c === 179 || k === " ") { setAuto(!auto); }
+  else if (/^[0-9]$/.test(k)) { var n = k === "0" ? 9 : Number(k) - 1; if (n < PAGES.length) { load(n); toast((n + 1) + " · " + PAGES[cur].name); } }
+  else return;
+  if (e.preventDefault) e.preventDefault();
+}
+document.addEventListener("keydown", onKey);
+// The MILLS OS TV app sends the remote's keys here (it has no pointer).
+var KEYCODES = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 13, MediaPlayPause: 179 };
+window.millsKey = function (k) { onKey({ key: k, keyCode: KEYCODES[k] || 0, preventDefault: function () {} }); };
+function hookKeys(f) {
+  try {
+    var d = f.contentWindow.document;
+    d.addEventListener("keydown", onKey);
+    // A tab picked with the TV cursor goes through here, so the page and auto state stay in step.
+    d.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest ? e.target.closest("a") : null; if (!a) return;
+      var href = (a.getAttribute("href") || "").split("?")[0];
+      if (href === "#auto") { e.preventDefault(); setAuto(!auto); return; }
+      if (href === "#next") { e.preventDefault(); load(cur + 1); toast((cur + 1) + " · " + PAGES[cur].name); return; }
+      if (href === "#prev") { e.preventDefault(); load(cur - 1); toast((cur + 1) + " · " + PAGES[cur].name); return; }
+      for (var k = 0; k < PAGES.length; k++) if (PAGES[k].file === href) { e.preventDefault(); if (auto) { auto = false; store("auto", "off"); } load(k); toast((k + 1) + " · " + PAGES[k].name + " · auto off"); return; }
+      e.preventDefault();
+    });
+  } catch (err) {}
+}
+
+// Live clock with seconds. The agent data stays a snapshot; each board says "as of".
+function tick(f) {
+  try {
+    var d = f.contentDocument, h = d && d.querySelector("header");
+    if (!h) return;
+    var now = new Date(), hr = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    var hm = ((hr % 12) || 12) + ":" + (m < 10 ? "0" : "") + m, ap = hr < 12 ? "AM" : "PM";
+    var tsec = hm + ":" + (s < 10 ? "0" : "") + s + " " + ap;
+    var days = ["SUN","MON","TUE","WED","THU","FRI","SAT"], mons = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    var dl = days[now.getDay()] + " " + mons[now.getMonth()] + " " + now.getDate();
+    var els = h.querySelectorAll("div, span");
+    for (var k = 0; k < els.length; k++) {
+      var e = els[k]; if (e.children.length) continue;
+      var t = e.textContent.trim();
+      if (/^\d{1,2}:\d\d(:\d\d)? (AM|PM)$/.test(t)) e.textContent = tsec;
+      else if (/^[A-Z]{3} [A-Z]{3} \d{1,2} · /.test(t)) e.textContent = t.replace(/^[A-Z]{3} [A-Z]{3} \d{1,2}/, dl);
+    }
+  } catch (err) {}
+}
+function drift() { dx = Math.round((Math.random() * 2 - 1) * DRIFT); dy = Math.round((Math.random() * 2 - 1) * DRIFT); place(); }
+function dim() { var h = new Date().getHours(); document.getElementById("dim").style.opacity = (h >= DIM_FROM || h < DIM_TO) ? DIM_LEVEL : 0; }
+
+// Start: the address wins (?page=activity&auto=off), then what was last picked on this TV, then auto from Glance.
+var pp = param("page"), pa = param("auto");
+var start = indexOf(pp || store("page") || "glance"); if (start < 0) start = 0;
+auto = pa ? pa !== "off" : store("auto") !== "off";
+window.addEventListener("resize", fit);
+if (window.visualViewport) visualViewport.addEventListener("resize", fit);
+fit(); load(start); dim();
+setTimeout(function () { toast(PAGES[cur].name + " · auto " + (auto ? "on" : "off") + " · ← → to pick · OK for auto"); }, 1200);
+setTimeout(function () { document.getElementById("diag").style.display = "none"; }, DIAG_SECONDS * 1000);
+setInterval(function () { tick(frames[front]); }, 1000);
+setInterval(drift, DRIFT_EVERY * 1000);
+setInterval(dim, 60 * 1000);
+setInterval(fit, 5000);
+</script>
+</body>
+</html>

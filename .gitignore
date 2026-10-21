@@ -1,0 +1,26 @@
+# secrets and per-house state: never commit
+blink-bridge/blink-token.json
+blink-bridge/*.tmp
+nest-bridge/.matter-storage/
+**/.env
+# dependencies, logs, build output, large binaries
+**/.venv/
+**/node_modules/
+**/__pycache__/
+*.log
+guard/launchd.err
+out/
+dl/
+launcher_backups/
+millsos-tv-app/.gradle/
+millsos-tv-app/app/build/
+millsos-tv-app/local.properties
+# rendered dashboard pages and private board designs
+dashboard/boards/
+dashboard/tv-r-*.html
+dashboard/tv-v4*.html
+*.tgz
+*.apk
+.DS_Store
+.fuse_hidden*
+*.bak*

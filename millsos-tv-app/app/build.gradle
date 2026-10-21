@@ -1,0 +1,31 @@
+plugins {
+    id 'com.android.application'
+}
+
+// MILLS OS TV v1.0 (Oct 19 2026). A full-screen viewer for the MILLS OS TV board on HUB.
+// No libraries: one Activity and the system WebView.
+android {
+    namespace 'com.millsos.tv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.millsos.tv'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Sideloaded over adb, never published: signed with the debug key.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

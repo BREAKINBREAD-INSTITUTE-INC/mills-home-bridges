@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MILLS OS</title>
+<style>
+  :root{
+    --bg:#070a0f; --panel:#0e141d; --panel2:#121a26; --line:#1e2a3a;
+    --ink:#e8eef6; --dim:#7d8ea3; --friday:#1D9E75;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(1200px 600px at 80% -10%, #10243a 0%, var(--bg) 55%);
+    color:var(--ink); font-family:-apple-system,"SF Pro Display","Segoe UI",system-ui,sans-serif;
+    padding:2.6vh 3vw; overflow:hidden;
+  }
+  .top{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.8vh}
+  .brand{display:flex; align-items:baseline; gap:1vw}
+  .brand h1{font-size:4.4vw; font-weight:800; letter-spacing:.05em}
+  .brand .os{color:var(--friday)}
+  .brand .sub{font-size:1.2vw; color:var(--dim); letter-spacing:.35em; text-transform:uppercase}
+  .clock{text-align:right}
+  .clock .t{font-size:3.8vw; font-weight:700; font-variant-numeric:tabular-nums; line-height:1}
+  .clock .d{font-size:1.3vw; color:var(--dim); margin-top:.4vh}
+  .section-label{font-size:1vw; color:var(--dim); letter-spacing:.3em; text-transform:uppercase; margin:1.2vh 0 .9vh}
+  .agents{display:grid; grid-template-columns:repeat(4,1fr); gap:1.1vw}
+  .agent{
+    background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line);
+    border-radius:1vw; padding:1.5vh 1.1vw; position:relative; overflow:hidden; min-height:12.5vh;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .agent .bar{position:absolute; left:0; top:0; bottom:0; width:.45vw; background:var(--c)}
+  .agent .nm{font-size:1.7vw; font-weight:700; letter-spacing:.03em}
+  .agent .role{font-size:.85vw; color:var(--dim); text-transform:uppercase; letter-spacing:.15em; margin-top:.3vh}
+  .agent .st{display:flex; align-items:center; gap:.6vw; font-size:1vw; margin-top:auto; color:#b9c6d6}
+  .dot{width:.9vw; height:.9vw; border-radius:50%; background:var(--c); box-shadow:0 0 1.4vh var(--c)}
+  .dot.idle{background:#3a475a; box-shadow:none}
+  .agent .host{margin-left:auto; color:var(--dim); font-variant-numeric:tabular-nums}
+  .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1.1vw; margin-top:.4vh}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:1vw; padding:1.8vh 1.1vw}
+  .stat .k{font-size:1vw; color:var(--dim); letter-spacing:.2em; text-transform:uppercase}
+  .stat .v{font-size:3vw; font-weight:700; font-variant-numeric:tabular-nums; margin-top:.5vh}
+  .stat .v small{font-size:1.3vw; color:var(--dim); font-weight:500}
+  .meter{height:.7vh; background:#16202e; border-radius:1vh; margin-top:1vh; overflow:hidden}
+  .meter i{display:block; height:100%; background:var(--friday); width:0}
+  .foot{position:fixed; left:3vw; right:3vw; bottom:1.6vh; display:flex; justify-content:space-between;
+        font-size:.95vw; color:var(--dim); border-top:1px solid var(--line); padding-top:1vh}
+  .live{color:var(--friday)} .live::before{content:"\25CF"; margin-right:.5vw; animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><h1>MILLS<span class="os">OS</span></h1><span class="sub">Hermes</span></div>
+    <div class="clock"><div class="t" id="time">--:--</div><div class="d" id="date">--</div></div>
+  </div>
+
+  <div class="section-label">Agents &middot; Hermes roster</div>
+  <div class="agents" id="agents"></div>
+
+  <div class="section-label">System &middot; <span id="host">hub</span></div>
+  <div class="grid">
+    <div class="stat"><div class="k">CPU Load</div><div class="v"><span id="load">0</span><small>%</small></div><div class="meter"><i id="loadbar"></i></div></div>
+    <div class="stat"><div class="k">Memory</div><div class="v"><span id="mem">0</span><small> GB</small></div></div>
+    <div class="stat"><div class="k">Disk Used</div><div class="v"><span id="disk">0%</span></div></div>
+    <div class="stat"><div class="k">Local Models</div><div class="v"><span id="models">0</span></div></div>
+  </div>
+
+  <div class="foot">
+    <span class="live">LIVE</span>
+    <span id="uptime">uptime --</span>
+    <span id="modellist"></span>
+  </div>
+
+<script>
+var IDLE=['standby','idle','blocked','stubbed','offline','down'];
+function render(d){
+  document.getElementById('time').textContent=d.time;
+  document.getElementById('date').textContent=d.date;
+  document.getElementById('host').textContent=d.host;
+  document.getElementById('load').textContent=d.load_pct;
+  document.getElementById('loadbar').style.width=d.load_pct+'%';
+  document.getElementById('mem').textContent=d.mem_gb;
+  document.getElementById('disk').textContent=d.disk_pct;
+  document.getElementById('models').textContent=d.model_count;
+  document.getElementById('uptime').textContent=d.uptime?('up '+d.uptime):'';
+  document.getElementById('modellist').textContent=(d.models||[]).slice(0,4).join('   ');
+  var wrap=document.getElementById('agents'); wrap.innerHTML='';
+  (d.agents||[]).forEach(function(a){
+    var s=(a.status||'').toLowerCase();
+    var idle=IDLE.indexOf(s)>=0;
+    var el=document.createElement('div');
+    el.className='agent'; el.style.setProperty('--c', a.color||'#3a475a');
+    el.innerHTML='<div class="bar"></div>'+
+      '<div><div class="nm">'+a.name+'</div><div class="role">'+(a.note||'')+'</div></div>'+
+      '<div class="st"><span class="dot '+(idle?'idle':'')+'"></span>'+(a.status||'standby')+
+      '<span class="host">'+(a.host||'')+'</span></div>';
+    wrap.appendChild(el);
+  });
+}
+function tick(){ fetch('/api/status').then(r=>r.json()).then(render).catch(()=>{}); }
+tick(); setInterval(tick,3000);
+</script>
+</body>
+</html>

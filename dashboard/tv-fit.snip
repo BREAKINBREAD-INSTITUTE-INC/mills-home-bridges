@@ -1,0 +1,29 @@
+<script>
+/* tv-fit v1.2: scale the board (any size) to whatever screen opens it. */
+(function () {
+  var r = document.body.firstElementChild;
+  if (!r) return;
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.height = "100vh"; // body clips at its own height otherwise (v1.1 fix)
+  document.body.style.overflow = "hidden";
+  function least(list, dflt) { var m = 0; for (var k = 0; k < list.length; k++) { var v = list[k]; if (v > 0 && (!m || v < m)) m = v; } return m || dflt; }
+  function f() {
+    var w, h, vv = window.visualViewport;
+    if (window.self !== window.top) {           // inside the rotator: the frame is the screen
+      w = window.innerWidth || 1920; h = window.innerHeight || 1080;
+    } else {                                    // opened on its own: smallest size any API reports
+      w = least([window.innerWidth, document.documentElement.clientWidth, vv && vv.width, window.screen && screen.width], 1920);
+      h = least([window.innerHeight, document.documentElement.clientHeight, vv && vv.height, window.screen && screen.height], 1080);
+    }
+    var bw = r.offsetWidth || 1920, bh = r.offsetHeight || 1080;
+    var s = Math.min(w / bw, h / bh);
+    r.style.transformOrigin = "0 0";
+    r.style.transform = "scale(" + s + ")";
+    r.style.marginLeft = Math.max(0, (w - bw * s) / 2) + "px";
+    r.style.marginTop = Math.max(0, (h - bh * s) / 2) + "px";
+  }
+  window.addEventListener("resize", f);
+  f();
+  setInterval(f, 5000);
+})();
+</script>
