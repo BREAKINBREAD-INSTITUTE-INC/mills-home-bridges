@@ -286,6 +286,13 @@ def status():
     for a in agents:
         a["state"], a["why"] = checked(a, peers, ports)
         a["status"] = {"ok": "live", "warn": "partial", "bad": "down"}.get(a["state"], "planned")
+        # A reviewed result (agents.json "review", from the latest tests) replaces the generic
+        # "in shadow" line, but only while the live checks pass: a machine down still shows red.
+        r = a.pop("review", None)
+        if r and a["state"] in ("ok", "warn"):
+            a["state"], a["why"] = r.get("state", a["state"]), r.get("why", a["why"])
+            a["word"], a["detail"] = r.get("word", ""), r.get("detail", "")
+            a["status"] = (r.get("word") or a["status"]).lower()
         a["host"] = a.get("machine", "").upper() or "—"
     lay = read_layout()
     agents = arranged(agents, lay["agents"], "note")
