@@ -307,7 +307,10 @@ def status():
             (f' (stand-in {alt["name"]})' if alt else "")
         a["served_state"], a["served_why"] = sp.get("state", "idle"), f'{sp["name"]} · {sp.get("why", "not checked")}' + \
             (" · no fallback" if a.get("fallback") == "none" else "")
-        a["cloud"] = "off"   # D-55: no agent calls a cloud model until the gateway exists
+        # D-52: Mills OS is hybrid. Private data (T0-T2) always stays local; cloud models take safe,
+        # non-private work once the routing gateway (OP-004) exists, so the agents' calls are local today.
+        a["cloud"] = "Hybrid · local now"
+        a["cloud_why"] = "Local now · cloud for safe work once the gateway is built"
     lay = read_layout()
     agents = arranged(agents, lay["agents"], "note")
     infra_now = arranged([dict(x) for x in _cache.get("infra", [])], lay["machines"], "role")
