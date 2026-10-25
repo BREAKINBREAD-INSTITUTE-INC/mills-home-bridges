@@ -1,25 +1,69 @@
 # MILLS home bridges
 
-Small, read-only services and scripts that run on one always-on machine at home (the "hub") and
+Small services and scripts that run on one always-on machine at home (the "hub") and
 feed the **MILLS TV** launcher (`mills-tv` repo): a Blink bridge, a Nest bridge over Matter, a
 status dashboard, a guard that keeps the TV the way we set it, and the scripts we used to clean up
 and manage a Sony BRAVIA (Google TV) over ADB.
 
-The rule behind all of it: **the TV reads, the phone approves.** None of these services change a
-camera, thermostat or account setting. They read, and they answer only the addresses you allow.
+The rule behind all of it: **the TV reads, the phone approves.** The services read, and they answer
+only the addresses you allow. Two narrow exceptions write anything: the Nest bridge can change the
+thermostat's targets and mode within fixed limits, and the dashboard stores the TV's Mission
+Control layout (card order, names, notes). Nothing changes a camera or an account setting.
 
 ## What's here
 
 | Folder / file | What it does |
 |---|---|
-| `blink-bridge/bridge.py` | Reads Blink cameras and doorbell events with [blinkpy](https://github.com/fronzbot/blinkpy) and serves JSON and snapshots on port 8779. Optional clip archive to a NAS folder (never deletes). Your password is never stored; only the refresh token, in `blink-token.json` (0600, git-ignored). |
-| `nest-bridge/` | Joins a Nest thermostat as a second, read-only Matter controller with [matter.js](https://github.com/project-chip/matter.js) and serves `GET /api/house` on port 8778. No cloud API key. Pairing state lives in `.matter-storage/` (git-ignored). |
-| `dashboard/` | `server.py` serves a status page and `/api/status` on port 8777: the hub's load, memory and disk, local models, and an agent roster (`agents.json`) checked against what Tailscale can see. `tv.html` is a page rotator for the TV; `dc_render.js` and `build_tv.sh` render design boards into pages. |
+| `blink-bridge/bridge.py` | Reads Blink cameras and doorbell events with [blinkpy](https://github.com/fronzbot/blinkpy) and serves JSON and snapshots on port 8779: the device list, clip history by camera and kind, the clips themselves (with HTTP Range, so the TV can seek) and their thumbnails. Optional clip archive to a NAS folder (never deletes). Account, network and camera ids and tokens are redacted from every log line and served error. Your password is never stored; only the refresh token, in `blink-token.json` (0600, git-ignored). |
+| `nest-bridge/` | Joins a Nest thermostat as a second Matter controller with [matter.js](https://github.com/project-chip/matter.js) (Google Home stays as it is) and serves it on port 8778. **v2** can change the setpoints and the mode, and nothing else: see below. No cloud API key. Pairing state lives in `.matter-storage/` and the change log in `changes.jsonl` (both git-ignored). Tests: `npm test`. |
+| `dashboard/` | `server.py` serves a status page and `/api/status` on port 8777: the hub's load, memory and disk, local models, an agent roster (`agents.json`) checked against what Tailscale can see, and, if you add an `infra.json`, your model machines and NAS. The fleet is checked in the background every 30 s, so the TV never waits on a slow machine. It also serves `/api/layout` and `/api/budget` (below). `tv.html` is a page rotator for the TV; `dc_render.js` and `build_tv.sh` render design boards into pages. |
 | `tv_guard.sh`, `guard/` | Every 15 minutes, checks the TV over ADB and puts back the default home, the screensaver and the debloat list if a TV update undid them. Never uninstalls; protected system apps are only reported. |
 | `*.sh`, `tv.py` | TV tools: connect, audit, debloat and restore, set ad-block DNS, build and install the launcher, screenshots, emulator tests, UniFi read-only probes. `tv.py` is a Sony Bravia REST (IP Control) client. |
 | `millsos-tv-app/` | An earlier, minimal full-screen viewer app for the dashboard. |
 | `brand_render/`, `wallpaper_render/` | HTML sources used to render the launcher's banner, icon and wallpapers. |
-| `MILLS-OS-TV-DESIGN-RULES.md` | The design system the TV screens follow: tokens, type scale, focus model, data-honesty rules. |
+| `MILLS-OS-TV-DESIGN-RULES.md` | The design system the TV screens follow: tokens, type scale, focus model, data-honesty rules. v2 adds the Glass look, the Quick menu and on-TV layout editing. |
+
+### Nest bridge v2: what the TV may change
+
+| Route | What it does |
+|---|---|
+| `GET /api/house` | The reading, plus the limits, the modes the Nest accepts, and the last change |
+| `GET /api/house/changes` | The last changes, newest last |
+| `POST /api/house/cool`, `/heat` | `{"f": 76}`: set the cooling or heating setpoint |
+| `POST /api/house/step` | `{"delta": 1 or -1, "target": "cool" or "heat"}`: one degree up or down |
+| `POST /api/house/mode` | `{"mode": "Off", "Heat", "Cool" or "Auto"}`: only modes the Nest accepts |
+
+Only addresses in `NEST_ALLOW` may call it (403 otherwise). Every write is clamped to 68-82 °F,
+keeps heat below cool (3 °F apart in Auto), is limited to one change every 3 s and 30 an hour,
+is read back from the thermostat before it counts as done, and is logged to `changes.jsonl`.
+
+### Mission Control layout (`/api/layout`)
+
+The TV's **Edit layout** mode saves here: `GET /api/layout` returns it, and `POST /api/layout`
+replaces it with `{"agents": [{"name", "label"?, "note"?}...], "machines": [...]}`. Only names,
+order and short text are accepted (labels up to 24 characters, notes up to 80), and only from the
+addresses in `DASH_ALLOW`. An empty label or note means "back to the default". `/api/status`
+returns the agents and machines in that order with `label` applied and the defaults alongside
+(`default_label`, `default_note`). It's stored in `dashboard/layout.json` (git-ignored).
+
+### Housing budget (`/api/budget`)
+
+`GET /api/budget` reads a tab-separated bills file **outside this repo** (path in `BILLS_TSV`,
+default `~/private/household_bills.tsv`) and returns each monthly line and the total. Columns:
+`date`, `payee`, `category`, `amount_usd`, `paid_with`, `note`; lines starting with `#` are
+skipped. For example (made-up figures):
+
+```
+date	payee	category	amount_usd	paid_with	note
+monthly	Landlord	rent	1500.00	ACH	fixed monthly
+2026-01-15	Power Co	electric	120.00	card
+2026-01-10	City	water, trash, sewer	90.00	card	billed about every 2 months
+2026-01-16	ISP	internet	60.00	card
+```
+
+A `monthly` row is fixed; for the others the latest row counts. A category containing "setup"
+is left out, and a note containing "every 2 months" halves the amount (and says so). Keep the
+file `chmod 600`; the dashboard serves it only to `DASH_ALLOW`.
 
 ### Sample TV boards
 
@@ -56,6 +100,7 @@ export TV=192.168.1.x            # your TV's address
 export HUB_IP=192.168.1.x        # this machine's LAN address (fallback if en0 has none)
 export BLINK_ALLOW="127.0.0.1,$TV"
 export DASH_ALLOW="127.0.0.1,$TV"
+export NEST_ALLOW="127.0.0.1,$TV"
 
 # Blink
 cd blink-bridge && python3 -m venv .venv && .venv/bin/pip install blinkpy aiohttp
@@ -84,7 +129,8 @@ Optional settings:
 
 ## Privacy
 
-- Tokens, Matter pairing state, logs, virtual environments and build output are git-ignored.
+- Tokens, Matter pairing state, the thermostat change log, the Mission Control layout, logs,
+  virtual environments and build output are git-ignored. The bills file lives outside the repo.
 - The bridges answer only the IPs in `*_ALLOW`.
 - Placeholders such as `192.168.1.x` and `<tv-ip>` stand for your own addresses.
 
