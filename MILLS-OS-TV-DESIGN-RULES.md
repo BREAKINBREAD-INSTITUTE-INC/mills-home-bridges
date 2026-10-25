@@ -17,7 +17,8 @@ Reference mockup: `mills-tv-fullconcept.html` (the five-view concept). This doc 
 3. **Honest data only.** Every reading is labeled and time-stamped. Show "unknown / offline /
    stale" plainly. Never show a static green dot that can't prove it's true. The number and its
    visual (ring, bar) come from the same source.
-4. **Calm and dark.** Deep background, one accent at a time, lots of breathing room.
+4. **Calm, one accent at a time, lots of breathing room.** Classic is deep and dark. Glass (v2, §3b)
+   may be bright by day (Daylight Glass) and is dark after sunset (Night Glass).
 5. **GPU-light for the VH2.** Gradients, strokes, and at most one slow animation. No video
    wallpaper, no blur, no animated shadows, no full-screen transitions.
 6. **Use each app's own logo**, never a redrawn brand mark. Tiles frame the app's real icon.
@@ -72,7 +73,7 @@ Expressed as `vw` against the 16:9 frame in the mockup, with the px equivalent o
 
 ## 3. Color meaning — one job per place
 
-Gold does three things, each a **different shape** so they never collide:
+In **Classic**, gold does three things, each a **different shape** so they never collide:
 - **Pill** (filled gold) = the view you're on (nav).
 - **Ring** (gold outline + slight lift) = where the cursor/focus is. Only one on screen.
 - **Left-bar + one pulsing dot** = something that needs you (attention). Never a ring.
@@ -81,6 +82,31 @@ Other colors:
 - **Teal** = healthy, active, on. **Red** = problem/offline (never used for focus or selection).
 - **Dim gray** = idle, unknown, secondary.
 - **Status is always a dot + a word.** Never color alone.
+
+## 3b. The Glass look (v2, Oct 25 2026)
+
+JJ's pick after the Lumen (tvOS-style) layouts he liked. Settings › Background › Look switches
+Glass ↔ Classic; Glass is the default. With Mode Auto it is **Daylight Glass** from sunrise and
+**Night Glass** after sunset (Daylight needs a background with a day version).
+
+- **Surfaces:** frosted (a translucent fill, no live blur): white over the photo by day, a light
+  veil at night. Cards and tiles 22px radius; buttons and settings rows are pills, each row its own.
+- **Focus = solid white fill + a small lift (1.04).** No ring, no underline. It replaces the gold
+  ring in Glass. On Night Glass the text inside the focused item takes its light-theme colour.
+- **Gold keeps the other two jobs:** "needs you" (left bar + dot), the one primary button
+  (e.g. Done in edit mode), and a card picked up in edit mode (gold edge). MILLS wordmark stays gold.
+- Status colours, the type scale (§2), spacing and the remote model (§4) are unchanged.
+- The background dim is lighter in Glass so the photo reads through.
+- **Quick menu** (sliders icon at Home's top right, or MENU on Home): two-line pill buttons
+  (name · current value) and round icon buttons. It only opens screens or switches the TV's own
+  look (Look, Mode); it never changes the house, an agent or a machine.
+
+## 3c. Editing on the TV (v2)
+
+Mission Control's **Edit layout** (or MENU) is the one editor here: it changes only what the cards
+show (order, name, note), never an agent, machine or setting, and saves on Hub (`/api/layout`).
+OK on a card: Move · Rename · Edit note · Reset. Moving: the card lifts, D-pad carries it within its
+own group, OK drops, BACK puts it back. Done saves; BACK with changes asks Save / Discard / Keep editing.
 
 ---
 
@@ -173,4 +199,5 @@ The Home summary is derived from these same states — they must always agree.
 
 ---
 
-*v1 — foundation locked. Revise this doc on purpose, with a version bump, never by drift.*
+*v1 — foundation locked. v2 (Oct 25 2026) — the Glass look (§3b) and on-TV layout editing (§3c).
+Revise this doc on purpose, with a version bump, never by drift.*

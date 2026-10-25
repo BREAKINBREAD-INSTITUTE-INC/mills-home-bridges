@@ -23,3 +23,7 @@ dashboard/missioncontrol.before-tv.html
 .DS_Store
 .fuse_hidden*
 *.bak*
+blink-bridge/cache/
+nest-bridge/changes.jsonl
+# JJ's Mission Control layout (card order, his own labels and notes): per-house state
+dashboard/layout.json

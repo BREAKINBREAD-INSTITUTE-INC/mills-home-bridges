@@ -1,27 +1,41 @@
-// MILLS TV · Nest bridge (runs on Hub).
+// MILLS TV · Nest bridge v2 (runs on Hub).
 //
-// Joins the Nest thermostat as a second, READ-ONLY Matter controller (Matter multi-admin: the
-// Google Home fabric stays exactly as it is) and serves what it reads as JSON on the LAN, for the
-// TV's House view. No cloud, no Google API key, no account password: pairing uses the one-time
-// code the Google Home app generates under "Linked Matter apps & services".
+// Joins the Nest thermostat as a second Matter controller (Matter multi-admin: the Google Home
+// fabric stays exactly as it is) and serves it as JSON on the LAN for the TV's House view. No
+// cloud, no Google API key, no account password: pairing uses the one-time code the Google Home
+// app generates under "Linked Matter apps & services".
 //
 //   node bridge.mjs pair <11-digit code>   once, while the Google Home share code is valid
-//   node bridge.mjs serve                  keep running (launchd does this); GET /api/house
-//   node bridge.mjs status                 print one reading and exit
+//   node bridge.mjs serve                  keep running (launchd does this); see api.mjs for routes
+//   node bridge.mjs status                 print one reading and what the Nest exposes, then exit
 //
-// The bridge never writes to the thermostat: the TV reads, the phone changes things.
+// v2 can change the cooling/heating setpoints and the mode, and nothing else. The rules for that
+// (allowlist, 68-82 °F, heat/cool gap, rate limit, read-back, change log) live in control.mjs and
+// api.mjs. What the Nest Learning Thermostat 4th gen (sw 2.4) exposes over Matter, read Oct 23:
+//   endpoint 1: Descriptor, Identify, OnOff, Thermostat (rev 9), Thermostat UI Configuration
+//   Thermostat features: Heating, Cooling, AutoMode. No Occupancy, Setback, Presets (so no Eco),
+//   Schedules, Events. ControlSequenceOfOperation 4 (cooling and heating). Attributes: local
+//   temperature, abs min/max heat and cool limits (50-90 °F), occupied heat/cool setpoints,
+//   MinSetpointDeadBand (0), control sequence, SystemMode. Not exposed: running state, PI demand,
+//   min/max setpoint limits, humidity, fan (no FanControl cluster), outdoor temperature.
+//   Accepted commands: SetpointRaiseLower only.
 
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Environment, StorageService, Logger } from "@matter/main";
-import { ManualPairingCodeCodec, QrPairingCodeCodec, NodeId } from "@matter/main/types";
-import { Thermostat, RelativeHumidityMeasurement, GeneralCommissioning } from "@matter/main/clusters";
+import { ManualPairingCodeCodec, QrPairingCodeCodec } from "@matter/main/types";
+import { Thermostat, RelativeHumidityMeasurement, FanControl, GeneralCommissioning } from "@matter/main/clusters";
 import { CommissioningController } from "@project-chip/matter.js";
+import { c2f, MODE_LABEL, parseAllow, RateLimit, ChangeLog } from "./control.mjs";
+import { createHandler } from "./api.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.NEST_BRIDGE_PORT ?? 8778);
 const POLL_MS = 60_000;
+// Only these addresses may read or change anything: HUB itself and the TV (same rule as the board).
+const TV_IP = process.env.NEST_TV_IP ?? "<tv-ip>";
+const ALLOW = parseAllow(process.env.NEST_ALLOW ?? `127.0.0.1,${TV_IP}`);
 
 Logger.level = process.env.MATTER_LOG ?? "warn";
 const environment = Environment.default;
@@ -40,13 +54,13 @@ const reading = {
     paired: false,
     name: null,
     indoorF: null, heatF: null, coolF: null, humidity: null,
-    mode: null,           // Off / Heat / Cool / Heat·Cool / Eco ...
-    running: null,        // idle / heating / cooling / fan
+    mode: null,           // Off / Heat / Cool / Heat · Cool ...
+    running: null,        // idle / heating / cooling / fan (the Nest doesn't expose it: see runningExposed)
     error: null,
 };
-
-const c2f = (v) => (v === null || v === undefined ? null : Math.round((v / 100) * 9 / 5 + 32));
-const MODES = { 0: "Off", 1: "Heat · Cool", 3: "Cool", 4: "Heat", 5: "Emergency heat", 6: "Precooling", 7: "Fan only", 8: "Dry", 9: "Sleep" };
+let modeValue = null;     // raw SystemMode, for modeKey in GET (kept out of the v1 fields)
+let info = null;          // what the device reports about itself, read once per connection
+let clients = null;       // { thermo, humid, fan }
 
 function running(state) {
     if (!state) return "idle";
@@ -56,30 +70,73 @@ function running(state) {
     return "idle";
 }
 
-async function readNode(node) {
-    let thermo, humid;
+function findClients(node) {
+    let thermo, humid, fan;
     for (const ep of node.getDevices()) {
-        thermo ??= ep.getClusterClient(Thermostat.Cluster);
+        thermo ??= ep.getClusterClient(Thermostat.Complete);
         humid ??= ep.getClusterClient(RelativeHumidityMeasurement.Cluster);
+        fan ??= ep.getClusterClient(FanControl.Complete);
     }
     if (!thermo) throw new Error("no thermostat cluster on this node");
+    return { thermo, humid, fan };
+}
+
+const A = Thermostat.Complete.attributes;
+async function readInfo(thermo, fan) {
+    const get = (a) => thermo.attributes[a].get().catch(() => null);
+    const [features, controlSequence, absMinHeat, absMaxHeat, absMinCool, absMaxCool, deadBand, list] = await Promise.all([
+        get("featureMap"), get("controlSequenceOfOperation"), get("absMinHeatSetpointLimit"), get("absMaxHeatSetpointLimit"),
+        get("absMinCoolSetpointLimit"), get("absMaxCoolSetpointLimit"), get("minSetpointDeadBand"), get("attributeList"),
+    ]);
+    const has = (a) => Array.isArray(list) && list.includes(A[a].id);
+    return {
+        features: features ?? {}, controlSequence, absMinHeat, absMaxHeat, absMinCool, absMaxCool, deadBand,
+        exposes: { runningState: has("thermostatRunningState"), presets: !!features?.presets, fan: !!fan },
+    };
+}
+
+async function readNode(node) {
+    clients ??= findClients(node);
+    const { thermo, humid, fan } = clients;
+    info ??= await readInfo(thermo, fan);
+    const get = (a) => thermo.attributes[a].get().catch(() => null);
     const [local, heat, cool, mode, state] = await Promise.all([
-        thermo.getLocalTemperatureAttribute(),
-        thermo.getOccupiedHeatingSetpointAttribute().catch(() => null),
-        thermo.getOccupiedCoolingSetpointAttribute().catch(() => null),
-        thermo.getSystemModeAttribute().catch(() => null),
-        thermo.getThermostatRunningStateAttribute().catch(() => null),
+        thermo.attributes.localTemperature.get(),
+        get("occupiedHeatingSetpoint"), get("occupiedCoolingSetpoint"), get("systemMode"),
+        info.exposes.runningState ? get("thermostatRunningState") : null,
     ]);
     let rh = null;
     if (humid) rh = await humid.getMeasuredValueAttribute().catch(() => null);
+    modeValue = mode;
     Object.assign(reading, {
         ok: true, at: Date.now(), error: null,
         indoorF: c2f(local), heatF: c2f(heat), coolF: c2f(cool),
-        humidity: rh === null ? null : Math.round(rh / 100),
-        mode: mode === null ? null : (MODES[mode] ?? `mode ${mode}`),
+        humidity: rh === null || rh === undefined ? null : Math.round(rh / 100),
+        mode: mode === null ? null : (MODE_LABEL[mode] ?? `mode ${mode}`),
         running: running(state),
         name: node.basicInformation?.nodeLabel || node.basicInformation?.productName || "Nest thermostat",
     });
+}
+
+/** Setpoints and mode straight from the thermostat (not the subscription cache). */
+async function readFresh() {
+    if (!clients) throw new Error("thermostat not connected");
+    const { thermo } = clients;
+    const [heat, cool, mode] = await Promise.all([
+        thermo.attributes.occupiedHeatingSetpoint.get(true),
+        thermo.attributes.occupiedCoolingSetpoint.get(true),
+        thermo.attributes.systemMode.get(true),
+    ]);
+    modeValue = mode;
+    Object.assign(reading, { heatF: c2f(heat), coolF: c2f(cool), mode: MODE_LABEL[mode] ?? `mode ${mode}`, at: Date.now(), ok: true });
+    return { heatF: c2f(heat), coolF: c2f(cool), mode };
+}
+
+async function write(what, value) {
+    if (!clients) throw new Error("thermostat not connected");
+    const a = { cool: "occupiedCoolingSetpoint", heat: "occupiedHeatingSetpoint", mode: "systemMode" }[what];
+    if (!a) throw new Error("unknown setting");
+    await clients.thermo.attributes[a].set(value);
 }
 
 async function pair(codeText) {
@@ -131,11 +188,18 @@ async function serve() {
     await tick();
     setInterval(tick, POLL_MS);
 
-    http.createServer((req, res) => {
-        if (req.method !== "GET" || !req.url.startsWith("/api/house")) { res.writeHead(404); res.end(); return; }
-        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
-        res.end(JSON.stringify({ ...reading, ageSec: reading.at ? Math.round((Date.now() - reading.at) / 1000) : null }));
-    }).listen(PORT, "0.0.0.0", () => console.log(`Nest bridge on http://0.0.0.0:${PORT}/api/house`));
+    const handle = createHandler({
+        device: {
+            snapshot: () => reading,
+            modeValue: () => modeValue,
+            info: () => (reading.paired && clients ? info : null),
+            readFresh, write,
+        },
+        allow: ALLOW, tvIp: TV_IP,
+        rate: new RateLimit({ minGapMs: 3000, perHour: 30 }),
+        log: new ChangeLog(path.join(HERE, "changes.jsonl")),
+    });
+    http.createServer(handle).listen(PORT, "0.0.0.0", () => console.log(`Nest bridge v2 on http://0.0.0.0:${PORT}/api/house · allowed: ${[...ALLOW].join(", ")}`));
 }
 
 const [cmd, arg] = process.argv.slice(2);
@@ -144,7 +208,7 @@ if (cmd === "pair" && arg) { await pair(arg); await controller.close(); process.
 else if (cmd === "status") {
     const node = await firstNode();
     if (!node) console.log("Not paired yet.");
-    else { await readNode(node); console.log(JSON.stringify(reading, null, 2)); }
+    else { await readNode(node); console.log(JSON.stringify({ ...reading, info }, null, 2)); }
     await controller.close(); process.exit(0);
 }
 else if (cmd === "serve") await serve();
