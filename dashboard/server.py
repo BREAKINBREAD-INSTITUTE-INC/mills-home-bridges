@@ -294,6 +294,20 @@ def status():
             a["word"], a["detail"] = r.get("word", ""), r.get("detail", "")
             a["status"] = (r.get("word") or a["status"]).lower()
         a["host"] = a.get("machine", "").upper() or "—"
+    # What serves each agent, from its own model key: the Spark in infra.json and its live check.
+    # Never the dashboard host's own numbers (HUB's load and Ollama list have nothing to do with it).
+    sparks = {x.get("machine"): x for x in _cache.get("infra", []) if x.get("kind") == "spark"}
+    for a in agents:
+        sp = sparks.get(a.get("model") or "")
+        if a.get("built") == "no" or not sp:
+            a["served_by"], a["served_state"], a["served_why"] = "", "idle", ""
+            continue
+        alt = sparks.get(a.get("standin") or "")
+        a["served_by"] = f'{sp.get("model_short") or sp.get("model") or "model —"} · {sp["name"]}' + \
+            (f' (stand-in {alt["name"]})' if alt else "")
+        a["served_state"], a["served_why"] = sp.get("state", "idle"), f'{sp["name"]} · {sp.get("why", "not checked")}' + \
+            (" · no fallback" if a.get("fallback") == "none" else "")
+        a["cloud"] = "off"   # D-55: no agent calls a cloud model until the gateway exists
     lay = read_layout()
     agents = arranged(agents, lay["agents"], "note")
     infra_now = arranged([dict(x) for x in _cache.get("infra", [])], lay["machines"], "role")
